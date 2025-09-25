@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ALLOWED_CHAT_ID = os.getenv('ALLOWED_CHAT_ID')
-PLAYER_URL = os.getenv('PLAYER_URL', 'https://your-player.vercel.app/video')
+PLAYER_URL = os.getenv('PLAYER_URL', 'https://playloom.vercel.app')
 PROXY_URL = os.getenv('PROXY_URL', 'https://your-proxy.onrender.com/proxy')
 SECRET_KEY = os.getenv('SECRET_KEY', 'mysecret123')
 CACHE_FILE = 'file_cache.json'
