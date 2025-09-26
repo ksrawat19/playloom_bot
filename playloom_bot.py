@@ -4,7 +4,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
 
-BOT_TOKEN='8467061785:AAGPIz5pcNQRNfZnVH5iRTt2T2fENPmOyP'
+BOT_TOKEN='8467061785:AAGPIz5pcNQRNfZnVH5iRTt2T2fENPmOyPs'
 PORT = int(os.getenv('PORT', 10000))
 
 async def reply_rawat(update: Update, context: ContextTypes.DEFAULT_TYPE):
