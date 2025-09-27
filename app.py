@@ -18,14 +18,28 @@ def send_message(chat_id, text, reply_markup=None):
         "parse_mode": "Markdown",
         "reply_markup": reply_markup
     }
-    requests.post(url, json=payload)
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print(f"Error sending message: {e}")
+
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ PlayLoom Bot is alive and listening for Telegram updates!"
 
 @app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
+    print("🔔 Webhook triggered")
     data = request.get_json()
+    print(f"📩 Incoming data: {data}")
+
     message = data.get("message", {})
     chat_id = message.get("chat", {}).get("id")
     message_id = message.get("message_id")
+
+    if not chat_id or not message_id:
+        print("⚠️ Missing chat_id or message_id")
+        return "ignored", 200
 
     if message.get("text") == "/start":
         send_message(chat_id, "🎬 Welcome to PlayLoom!\nSend or forward a video to get a Play button.")
@@ -40,12 +54,12 @@ def webhook():
             })
             send_message(chat_id, "📤 Uploading to PlayLoom Stream...\nYou'll get your Play button shortly.")
         except Exception as e:
-            send_message(chat_id, f"⚠️ Error forwarding video: {str(e)}")
+            print(f"Error forwarding video: {e}")
+            send_message(chat_id, f"⚠️ Error uploading your video: {str(e)}")
         return "ok", 200
 
     send_message(chat_id, "👋 Send or forward a video to get started.")
     return "ok", 200
 
-# Required for Render to keep the app alive
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
