@@ -1,15 +1,16 @@
-import os
+# optional
+from flask import Flask
 from threading import Thread
-import logging
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = Flask('')
 
-def keep_alive(app):
-    def run():
-        port = int(os.getenv('PORT', 8080))
-        logger.info(f"Starting Flask server on port {port}")
-        app.run(host='0.0.0.0', port=port)
-    logger.info("Starting keep_alive thread")
+@app.route('/')
+def home():
+    return "Keep-alive server running"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
     t = Thread(target=run)
     t.start()
