@@ -32,13 +32,20 @@ def webhook():
         return "ok", 200
 
     if "video" in message:
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/forwardMessage", json={
-            "chat_id": CHANNEL_ID,
-            "from_chat_id": chat_id,
-            "message_id": message_id
-        })
-        send_message(chat_id, "📤 Uploading to PlayLoom Stream...\nYou'll get your Play button shortly.")
+        try:
+            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/forwardMessage", json={
+                "chat_id": CHANNEL_ID,
+                "from_chat_id": chat_id,
+                "message_id": message_id
+            })
+            send_message(chat_id, "📤 Uploading to PlayLoom Stream...\nYou'll get your Play button shortly.")
+        except Exception as e:
+            send_message(chat_id, f"⚠️ Error forwarding video: {str(e)}")
         return "ok", 200
 
     send_message(chat_id, "👋 Send or forward a video to get started.")
     return "ok", 200
+
+# Required for Render to keep the app alive
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
