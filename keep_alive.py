@@ -1,16 +1,14 @@
-# optional
 from flask import Flask
-from threading import Thread
+import threading
 
-app = Flask('')
+app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Keep-alive server running"
+    return "✅ Keep-alive server is running."
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+def keep_alive(app_instance):
+    def run():
+        app_instance.run(host='0.0.0.0', port=10000)
+    thread = threading.Thread(target=run)
+    thread.start()
