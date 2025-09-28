@@ -6,7 +6,7 @@ from keep_alive import keep_alive  # Ensure keep_alive.py is present
 
 # Load environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-ALLOWED_CHAT_ID = os.getenv("ALLOWED_CHAT_ID")
+ALLOWED_CHAT_ID = os.getenv("ALLOWED_CHAT_ID")  # Your private channel ID
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # Logging setup
@@ -20,6 +20,7 @@ if not BOT_TOKEN or not ALLOWED_CHAT_ID:
 
 # Flask app
 app = Flask(__name__)
+user_map = {}  # Maps forwarded message_id to original user chat_id
 
 @app.route('/')
 def home():
@@ -33,17 +34,30 @@ def webhook():
     message = data.get("message", {})
     chat_id = message.get("chat", {}).get("id")
     message_id = message.get("message_id")
+    text = message.get("text", "")
 
     if not chat_id or not message_id:
         logger.warning("Missing chat_id or message_id.")
         return "ignored", 200
 
     # Handle /start
-    if message.get("text") == "/start":
+    if text == "/start":
         send_message(chat_id, "🎬 Welcome to PlayLoom!\nSend or forward a video to get a Play button.")
         return "ok", 200
 
-    # Handle video message
+    # Handle file_id reply from userbot
+    if text.startswith("file_id:"):
+        file_id = text.split("file_id:")[1].strip()
+        reply_to_id = message.get("reply_to_message", {}).get("message_id")
+
+        original_user_id = user_map.get(str(reply_to_id))
+        if original_user_id:
+            send_message(original_user_id, f"▶️ Your video is ready!\nfile_id: `{file_id}`")
+        else:
+            logger.warning("⚠️ No user found for file_id reply.")
+        return "ok", 200
+
+    # Handle video message from user
     if "video" in message:
         try:
             # Forward to private channel
@@ -54,6 +68,11 @@ def webhook():
             }
             response = requests.post(f"{TELEGRAM_API_URL}/forwardMessage", json=forward_payload)
             logger.debug(f"Forward response: {response.json()}")
+
+            # Track user for reply
+            forwarded_msg_id = response.json().get("result", {}).get("message_id")
+            if forwarded_msg_id:
+                user_map[str(forwarded_msg_id)] = chat_id
 
             send_message(chat_id, "📤 Uploading to PlayLoom Stream...\nYou'll get your Play button shortly.")
         except Exception as e:
