@@ -250,14 +250,11 @@ async def schedule_token_cleanup():
             logger.error(f"Token cleanup error: {e}", exc_info=True)
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(start_services())
+        asyncio.run(start_services())
     except KeyboardInterrupt:
         print("╔═══════════════════════════════════════════════════════════╗")
         print("║                   Bot stopped by user (CTRL+C)            ║")
         print("╚═══════════════════════════════════════════════════════════╝")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
-    finally:
-        loop.close()
