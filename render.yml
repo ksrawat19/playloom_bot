@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: playloom-web
+    env: docker
+    plan: free
+    autoDeploy: true
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: API_ID
+        value: your_api_id
+      - key: API_HASH
+        value: your_api_hash
+      - key: BOT_TOKEN
+        value: your_bot_token
+      - key: DATABASE_URL
+        value: your_mongodb_url
+      - key: BIN_CHANNEL
+        value: your_bin_channel_id
+      - key: OWNER_ID
+        value: your_owner_id
+      - key: OWNER_USERNAME
+        value: your_username
+      - key: FORCE_CHANNEL_ID
+        value: optional_force_channel_id
+      - key: TOKEN_ENABLED
+        value: "True"
+      - key: SHORTEN_MEDIA_LINKS
+        value: "False"
+      - key: PORT
+        value: "8080"
+      - key: BIND_ADDRESS
+        value: "0.0.0.0"
+
+  - type: worker
+    name: playloom-bot
+    env: docker
+    plan: free
+    autoDeploy: true
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: API_ID
+        value: your_api_id
+      - key: API_HASH
+        value: your_api_hash
+      - key: BOT_TOKEN
+        value: your_bot_token
+      - key: DATABASE_URL
+        value: your_mongodb_url
+      - key: BIN_CHANNEL
+        value: your_bin_channel_id
+      - key: OWNER_ID
+        value: your_owner_id
+      - key: OWNER_USERNAME
+        value: your_username
+      - key: FORCE_CHANNEL_ID
+        value: optional_force_channel_id
+      - key: TOKEN_ENABLED
+        value: "True"
+      - key: SHORTEN_MEDIA_LINKS
+        value: "False"
+      - key: PORT
+        value: "8080"
+      - key: BIND_ADDRESS
+        value: "0.0.0.0"
