@@ -10,8 +10,7 @@ from uvloop import install
 from pathlib import Path
 
 install()
-from aiohttp import web
-from pyrogram import idle
+from aiohttp  import web
 
 from PlayLoom import __version__
 from PlayLoom.bot import StreamBot
@@ -209,7 +208,7 @@ async def start_services():
     ]
 
     try:
-        await idle()
+        await asyncio.Event().wait()
     finally:
         print("   ▶ Shutting down services...")
 
