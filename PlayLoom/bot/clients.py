@@ -2,8 +2,6 @@
 
 import asyncio
 
-from pyrogram import Client
-
 from PlayLoom.bot import StreamBot, multi_clients, work_loads
 from PlayLoom.utils.config_parser import TokenParser
 from PlayLoom.utils.handler import handle_flood_wait
@@ -18,6 +16,10 @@ async def cleanup_clients():
             logger.error(f"Error stopping client: {e}", exc_info=True)
 
 async def initialize_clients():
+    # --- FIX: Import Client here, inside the async function ---
+    from pyrogram import Client 
+    # --------------------------------------------------------
+    
     print("╠══════════════════ INITIALIZING CLIENTS ═══════════════════╣")
     multi_clients[0] = StreamBot
     work_loads[0] = 0
