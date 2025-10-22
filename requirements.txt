@@ -7,3 +7,6 @@ psutil
 python-dotenv
 tgcrypto
 uvloop
+pyrogram
+dnspython
+pymongo
