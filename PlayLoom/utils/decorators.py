@@ -1,18 +1,22 @@
 # PlayLoom/utils/decorators.py
 
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from PlayLoom.utils.database import db
 from PlayLoom.utils.handler import handle_flood_wait
 from PlayLoom.utils.logger import logger
 from PlayLoom.utils.messages import (MSG_DECORATOR_BANNED,
-                                    MSG_ERROR_UNAUTHORIZED, MSG_TOKEN_INVALID)
+                                     MSG_ERROR_UNAUTHORIZED, MSG_TOKEN_INVALID)
 from PlayLoom.utils.shortener import shorten
 from PlayLoom.utils.tokens import allowed, check, generate
 from PlayLoom.vars import Var
 
 
-async def check_banned(client, message: Message):
+async def check_banned(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message
+    
     try:
         if not message.from_user:
             return True
@@ -43,7 +47,10 @@ async def check_banned(client, message: Message):
         logger.error(f"Error in check_banned: {e}", exc_info=True)
         return True
 
-async def require_token(client, message: Message):
+async def require_token(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+    
     try:
         if not message.from_user:
             return True
@@ -101,7 +108,10 @@ async def require_token(client, message: Message):
             logger.error(f"Failed to send error message to user in require_token: {inner_e}", exc_info=True)
         return False
 
-async def get_shortener_status(client, message: Message):
+async def get_shortener_status(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message
+    
     try:
         user_id = message.from_user.id if message.from_user else None
         use_shortener = getattr(Var, "SHORTEN_MEDIA_LINKS", False)

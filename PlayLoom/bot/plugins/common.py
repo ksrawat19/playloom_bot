@@ -3,13 +3,14 @@
 import time
 from datetime import datetime, timedelta
 
-from pyrogram import Client, filters
-from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                            LinkPreviewOptions, Message, User)
+from pyrogram import filters # KEEP filters here for decorators
+
+# --- REMOVED: from pyrogram import Client
+# --- REMOVED: from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message, User)
 
 from PlayLoom.bot import StreamBot
 from PlayLoom.utils.bot_utils import (gen_dc_txt, get_user, log_newusr,
-                                     reply_user_err)
+                                      reply_user_err)
 from PlayLoom.utils.database import db
 from PlayLoom.utils.decorators import check_banned
 from PlayLoom.utils.file_properties import get_fname, get_fsize, parse_fid
@@ -31,13 +32,18 @@ from PlayLoom.utils.messages import (
 from PlayLoom.vars import Var
 
 @StreamBot.on_message(filters.command("start") & filters.private)
-async def start_command(bot: Client, msg: Message):
+async def start_command(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+    
     if not await check_banned(bot, msg):
         return
     user = msg.from_user
     if user:
         await log_newusr(bot, user.id, user.first_name)
     
+    # ... (rest of start_command function logic)
     if len(msg.command) == 2:
         payload = msg.command[1]
         
@@ -88,8 +94,13 @@ async def start_command(bot: Client, msg: Message):
     
     await handle_flood_wait(msg.reply_text, text=txt, reply_markup=InlineKeyboardMarkup(btns))
 
+
 @StreamBot.on_message(filters.command("help") & filters.private)
-async def help_command(bot: Client, msg: Message):
+async def help_command(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
     if not await check_banned(bot, msg):
         return
     if msg.from_user:
@@ -106,7 +117,11 @@ async def help_command(bot: Client, msg: Message):
     await handle_flood_wait(msg.reply_text, text=txt, reply_markup=InlineKeyboardMarkup(btns))
 
 @StreamBot.on_message(filters.command("about") & filters.private)
-async def about_command(bot: Client, msg: Message):
+async def about_command(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+    
     if not await check_banned(bot, msg):
         return
     if msg.from_user:
@@ -120,7 +135,10 @@ async def about_command(bot: Client, msg: Message):
     
     await handle_flood_wait(msg.reply_text, text=MSG_ABOUT, reply_markup=InlineKeyboardMarkup(btns))
 
-async def send_user_dc(msg: Message, user: User):
+async def send_user_dc(msg, user):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, User
+    
     txt = await gen_dc_txt(user)
     url = f"https://t.me/{user.username}" if user.username else f"tg://user?id={user.id}"
     btns = [
@@ -129,7 +147,10 @@ async def send_user_dc(msg: Message, user: User):
     ]
     await handle_flood_wait(msg.reply_text, text=txt, reply_markup=InlineKeyboardMarkup(btns))
 
-async def send_file_dc(msg: Message, file_msg: Message):
+async def send_file_dc(msg, file_msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
     try:
         fname = get_fname(file_msg) or "Untitled File"
         fsize = humanbytes(get_fsize(file_msg))
@@ -168,7 +189,11 @@ async def send_file_dc(msg: Message, file_msg: Message):
         await reply_user_err(msg, MSG_DC_FILE_ERROR)
 
 @StreamBot.on_message(filters.command("dc"))
-async def dc_command(bot: Client, msg: Message):
+async def dc_command(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+    
     if not await check_banned(bot, msg):
         return
     if not await force_channel_check(bot, msg):
@@ -201,7 +226,11 @@ async def dc_command(bot: Client, msg: Message):
         await reply_user_err(msg, MSG_DC_ANON_ERROR)
 
 @StreamBot.on_message(filters.command("ping") & filters.private)
-async def ping_command(bot: Client, msg: Message):
+async def ping_command(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message
+    
     if not await check_banned(bot, msg):
         return
     if not await force_channel_check(bot, msg):

@@ -4,10 +4,10 @@ import asyncio
 from typing import Any, Dict, Optional
 from urllib.parse import quote
 
-from pyrogram import Client
-from pyrogram.enums import ChatMemberStatus
-from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                            LinkPreviewOptions, Message, User)
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram import Client
+# from pyrogram.enums import ChatMemberStatus
+# from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message, User)
 
 from PlayLoom.utils.database import db
 from PlayLoom.utils.file_properties import get_fname, get_fsize, get_hash
@@ -15,19 +15,25 @@ from PlayLoom.utils.handler import handle_flood_wait
 from PlayLoom.utils.human_readable import humanbytes
 from PlayLoom.utils.logger import logger
 from PlayLoom.utils.messages import (MSG_BUTTON_GET_HELP, MSG_DC_UNKNOWN,
-                                    MSG_DC_USER_INFO, MSG_NEW_USER)
+                                     MSG_DC_USER_INFO, MSG_NEW_USER)
 from PlayLoom.utils.shortener import shorten
 from PlayLoom.vars import Var
 
 
 
-async def notify_ch(cli: Client, txt: str):
+async def notify_ch(cli, txt: str):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    
     if not (hasattr(Var, 'BIN_CHANNEL') and isinstance(Var.BIN_CHANNEL, int) and Var.BIN_CHANNEL != 0):
         return
     await handle_flood_wait(cli.send_message, chat_id=Var.BIN_CHANNEL, text=txt)
 
 
-async def notify_own(cli: Client, txt: str):
+async def notify_own(cli, txt: str):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    
     o_ids = Var.OWNER_ID if isinstance(Var.OWNER_ID, (list, tuple, set)) else [Var.OWNER_ID]
     tasks = [handle_flood_wait(cli.send_message, chat_id=oid, text=txt) for oid in o_ids]
     if hasattr(Var, 'BIN_CHANNEL') and isinstance(Var.BIN_CHANNEL, int) and Var.BIN_CHANNEL != 0:
@@ -35,7 +41,10 @@ async def notify_own(cli: Client, txt: str):
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
-async def reply_user_err(msg: Message, err_txt: str):
+async def reply_user_err(msg, err_txt: str):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message
+
     await handle_flood_wait(
         msg.reply_text,
         text=err_txt,
@@ -44,7 +53,10 @@ async def reply_user_err(msg: Message, err_txt: str):
     )
 
 
-async def log_newusr(cli: Client, uid: int, fname: str):
+async def log_newusr(cli, uid: int, fname: str):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    
     try:
         if await db.is_user_exist(uid):
             return
@@ -55,7 +67,10 @@ async def log_newusr(cli: Client, uid: int, fname: str):
         logger.error(f"Database error in log_newusr for user {uid}: {e}")
 
 
-async def gen_links(fwd_msg: Message, shortener: bool = True) -> Dict[str, str]:
+async def gen_links(fwd_msg, shortener: bool = True) -> Dict[str, str]:
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message
+    
     base_url = Var.URL.rstrip("/")
     fid = fwd_msg.id
     m_name_raw = get_fname(fwd_msg)
@@ -83,12 +98,19 @@ async def gen_links(fwd_msg: Message, shortener: bool = True) -> Dict[str, str]:
     return {"stream_link": slink, "online_link": olink, "media_name": m_name, "media_size": m_size_hr}
 
 
-async def gen_dc_txt(usr: User) -> str:
+async def gen_dc_txt(usr) -> str:
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import User
+    
     dc_id_val = usr.dc_id if usr.dc_id is not None else MSG_DC_UNKNOWN
     return MSG_DC_USER_INFO.format(user_name=usr.first_name or 'User', user_id=usr.id, dc_id=dc_id_val)
 
 
-async def get_user(cli: Client, qry: Any) -> Optional[User]:
+async def get_user(cli, qry: Any):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import User
+    
     if isinstance(qry, str):
         if qry.startswith('@'):
             return await handle_flood_wait(cli.get_users, qry)
@@ -99,12 +121,19 @@ async def get_user(cli: Client, qry: Any) -> Optional[User]:
     return None
 
 
-async def is_admin(cli: Client, chat_id_val: int) -> bool:
+async def is_admin(cli, chat_id_val: int) -> bool:
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.enums import ChatMemberStatus
+    
     member = await handle_flood_wait(cli.get_chat_member, chat_id_val, cli.me.id)
     if member is None:
         return False
     return member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
 
 
-async def reply(msg: Message, **kwargs):
+async def reply(msg, **kwargs):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message, LinkPreviewOptions
+    
     return await handle_flood_wait(msg.reply_text, **kwargs, quote=True, link_preview_options=LinkPreviewOptions(is_disabled=True))

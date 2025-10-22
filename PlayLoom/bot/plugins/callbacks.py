@@ -1,9 +1,8 @@
 # PlayLoom/bot/plugins/callbacks.py
 
-from pyrogram import Client, filters
-from pyrogram.errors import MessageNotModified, MessageDeleteForbidden
-from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
-                            InlineKeyboardMarkup, LinkPreviewOptions)
+# --- KEEP 'filters' at the top for decorator to work ---
+from pyrogram import filters
+# --- REMOVE 'Client' from this import ---
 
 from PlayLoom.bot import StreamBot
 from PlayLoom.utils.broadcast import broadcast_ids
@@ -18,7 +17,15 @@ from PlayLoom.utils.messages import (
 )
 from PlayLoom.vars import Var
 
-async def get_force_channel_button(client: Client):
+# --- Removed Top-Level Imports:
+# from pyrogram.errors import MessageNotModified, MessageDeleteForbidden
+# from pyrogram.types import (CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions)
+
+async def get_force_channel_button(client):
+    # Import Pyrogram classes only here, inside an async context
+    from pyrogram import Client
+    from pyrogram.types import InlineKeyboardButton
+    
     if not Var.FORCE_CHANNEL_ID:
         return None
     try:
@@ -35,11 +42,17 @@ async def get_force_channel_button(client: Client):
     return None
 
 @StreamBot.on_callback_query(filters.regex(r"^help_command$"))
-async def help_callback(client: Client, callback_query: CallbackQuery):
+async def help_callback(client, callback_query):
+    # Import Pyrogram classes/errors only here
+    from pyrogram import Client
+    from pyrogram.errors import MessageNotModified
+    from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
+    
     try:
         await callback_query.answer()
         buttons = [[InlineKeyboardButton(MSG_BUTTON_ABOUT, callback_data="about_command")]]
         force_button = await get_force_channel_button(client)
+        # ... rest of the function logic
         if force_button:
             buttons.append(force_button)
         buttons.append([InlineKeyboardButton(MSG_BUTTON_CLOSE, callback_data="close_panel")])
@@ -56,7 +69,12 @@ async def help_callback(client: Client, callback_query: CallbackQuery):
         await handle_flood_wait(callback_query.answer, "An error occurred. Please try again.", show_alert=True)
 
 @StreamBot.on_callback_query(filters.regex(r"^about_command$"))
-async def about_callback(client: Client, callback_query: CallbackQuery):
+async def about_callback(client, callback_query):
+    # Import Pyrogram classes/errors only here
+    from pyrogram import Client
+    from pyrogram.errors import MessageNotModified
+    from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
+
     try:
         await callback_query.answer()
         buttons = [
@@ -79,7 +97,11 @@ async def about_callback(client: Client, callback_query: CallbackQuery):
         await handle_flood_wait(callback_query.answer, "An error occurred. Please try again.", show_alert=True)
 
 @StreamBot.on_callback_query(filters.regex(r"^restart_broadcast$"))
-async def restart_broadcast_callback(client: Client, callback_query: CallbackQuery):
+async def restart_broadcast_callback(client, callback_query):
+    # Import Pyrogram classes/errors only here
+    from pyrogram import Client
+    from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
+
     if not await owner_only(client, callback_query):
         return
     try:
@@ -101,7 +123,12 @@ async def restart_broadcast_callback(client: Client, callback_query: CallbackQue
         await handle_flood_wait(callback_query.answer, "An error occurred. Please try again.", show_alert=True)
 
 @StreamBot.on_callback_query(filters.regex(r"^close_panel$"))
-async def close_panel_callback(client: Client, callback_query: CallbackQuery):
+async def close_panel_callback(client, callback_query):
+    # Import Pyrogram classes/errors only here
+    from pyrogram import Client
+    from pyrogram.errors import MessageDeleteForbidden
+    from pyrogram.types import CallbackQuery
+
     try:
         await handle_flood_wait(callback_query.answer)
         try:
@@ -123,7 +150,11 @@ async def close_panel_callback(client: Client, callback_query: CallbackQuery):
         logger.error(f"General error in close panel callback: {e}", exc_info=True)
 
 @StreamBot.on_callback_query(filters.regex(r"^cancel_"))
-async def cancel_broadcast(client: Client, callback_query: CallbackQuery):
+async def cancel_broadcast(client, callback_query):
+    # Import Pyrogram classes only here
+    from pyrogram import Client
+    from pyrogram.types import CallbackQuery
+
     try:
         broadcast_id = callback_query.data.split("_")[1]
         if broadcast_id in broadcast_ids:
@@ -143,8 +174,15 @@ async def cancel_broadcast(client: Client, callback_query: CallbackQuery):
         await handle_flood_wait(callback_query.answer, "An error occurred. Please try again.", show_alert=True)
 
 @StreamBot.on_callback_query()
-async def fallback_callback(client: Client, callback_query: CallbackQuery):
+async def fallback_callback(client, callback_query):
+    # Import Pyrogram classes only here
+    from pyrogram import Client
+    from pyrogram.types import CallbackQuery
+
     try:
         await handle_flood_wait(callback_query.answer, MSG_ERROR_CALLBACK_UNSUPPORTED, show_alert=True)
     except Exception as e:
         logger.error(f"Error in fallback callback: {e}", exc_info=True)
+
+# Note: The type hints (e.g., client: Client, callback_query: CallbackQuery) were removed/simplified from the function definitions
+# because we moved the class imports inside. Pyrogram still works fine without these hints.

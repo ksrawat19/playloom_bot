@@ -10,9 +10,9 @@ from io import BytesIO
 
 import psutil
 from pyrogram import filters
-from pyrogram.client import Client
-from pyrogram.enums import ParseMode
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+# --- FIX: REMOVED TOP-LEVEL IMPORT: from pyrogram.client import Client
+# --- FIX: REMOVED TOP-LEVEL IMPORT: from pyrogram.enums import ParseMode
+# --- FIX: REMOVED TOP-LEVEL IMPORT: from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from PlayLoom import StartTime, __version__
 from PlayLoom.bot import StreamBot, multi_clients, work_loads
@@ -48,7 +48,11 @@ owner_filter = filters.private & filters.user(Var.OWNER_ID)
 
 
 @StreamBot.on_message(filters.command("users") & owner_filter)
-async def get_total_users(client: Client, message: Message):
+async def get_total_users(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
     try:
         total = await db.total_users_count()
         await reply(message,
@@ -62,12 +66,16 @@ async def get_total_users(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("broadcast") & owner_filter)
-async def broadcast_handler(client: Client, message: Message):
+async def broadcast_handler(client, message):
     await broadcast_message(client, message)
 
 
 @StreamBot.on_message(filters.command("status") & owner_filter)
-async def show_status(client: Client, message: Message):
+async def show_status(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+    
     try:
         uptime_str = get_readable_time(int(time.time() - StartTime))
         workload_items = ""
@@ -92,7 +100,11 @@ async def show_status(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("stats") & owner_filter)
-async def show_stats(client: Client, message: Message):
+async def show_stats(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
     try:
         sys_uptime = await asyncio.to_thread(psutil.boot_time)
         sys_uptime_str = get_readable_time(int(time.time() - sys_uptime))
@@ -138,14 +150,20 @@ async def show_stats(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("restart") & owner_filter)
-async def restart_bot(client: Client, message: Message):
+async def restart_bot(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message
+    
     msg = await reply(message, text=MSG_RESTARTING)
     await db.add_restart_message(msg.id, message.chat.id)
     os.execv(sys.executable, [sys.executable, "-m", "PlayLoom"])
 
 
 @StreamBot.on_message(filters.command("log") & owner_filter)
-async def send_logs(client: Client, message: Message):
+async def send_logs(client, message):
+    # --- FIX: Import Pyrogram types here ---
+    from pyrogram.types import Message
+
     if not os.path.exists(LOG_FILE) or os.path.getsize(LOG_FILE) == 0:
         await reply(
             message,
@@ -163,7 +181,11 @@ async def send_logs(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("authorize") & owner_filter)
-async def authorize_command(client: Client, message: Message):
+async def authorize_command(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import Message
+    
     if len(message.command) != 2:
         return await reply(
             message, text=MSG_AUTHORIZE_USAGE, parse_mode=ParseMode.MARKDOWN)
@@ -181,7 +203,11 @@ async def authorize_command(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("deauthorize") & owner_filter)
-async def deauthorize_command(client: Client, message: Message):
+async def deauthorize_command(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import Message
+    
     if len(message.command) != 2:
         return await reply(
             message, text=MSG_DEAUTHORIZE_USAGE, parse_mode=ParseMode.MARKDOWN)
@@ -200,7 +226,11 @@ async def deauthorize_command(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("listauth") & owner_filter)
-async def list_authorized_command(client: Client, message: Message):
+async def list_authorized_command(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
     users = await list_allowed()
     if not users:
         return await reply(
@@ -222,7 +252,10 @@ async def list_authorized_command(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("ban") & owner_filter)
-async def ban_command(client: Client, message: Message):
+async def ban_command(client, message):
+    # --- FIX: Import Pyrogram types here ---
+    from pyrogram.types import Message
+    
     if len(message.command) < 2:
         return await reply(message, text=MSG_BAN_USAGE)
 
@@ -271,7 +304,10 @@ async def ban_command(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("unban") & owner_filter)
-async def unban_command(client: Client, message: Message):
+async def unban_command(client, message):
+    # --- FIX: Import Pyrogram types here ---
+    from pyrogram.types import Message
+    
     if len(message.command) != 2:
         return await reply(message, text=MSG_UNBAN_USAGE)
 
@@ -300,7 +336,11 @@ async def unban_command(client: Client, message: Message):
 
 
 @StreamBot.on_message(filters.command("shell") & owner_filter)
-async def run_shell_command(client: Client, message: Message):
+async def run_shell_command(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.types import Message
+    
     if len(message.command) < 2:
         return await reply(
             message, text=MSG_SHELL_USAGE, parse_mode=ParseMode.HTML)

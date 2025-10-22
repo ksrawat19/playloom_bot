@@ -2,9 +2,10 @@
 
 import asyncio
 
-from pyrogram import Client
-from pyrogram.errors import FloodWait, UserNotParticipant
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram import Client
+# from pyrogram.errors import FloodWait, UserNotParticipant
+# from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from PlayLoom.utils.handler import handle_flood_wait
 from PlayLoom.utils.logger import logger
@@ -14,7 +15,10 @@ from PlayLoom.vars import Var
 _force_link = None
 _force_title = None
 
-async def get_force_info(bot: Client):
+async def get_force_info(bot):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    
     global _force_link, _force_title
     
     if not Var.FORCE_CHANNEL_ID:
@@ -33,7 +37,12 @@ async def get_force_info(bot: Client):
         logger.error(f"Force channel error: {e}", exc_info=True)
         return None, None
 
-async def force_channel_check(client: Client, message: Message):
+async def force_channel_check(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.errors import FloodWait, UserNotParticipant
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
     if not Var.FORCE_CHANNEL_ID:
         return True
     

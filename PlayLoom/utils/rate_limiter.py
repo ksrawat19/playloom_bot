@@ -5,9 +5,10 @@ import math
 import asyncio
 from collections import deque
 from typing import Callable, Dict, Optional, Tuple
-from pyrogram import Client
-from pyrogram.types import Message, ReplyParameters
-from pyrogram.errors import FloodWait, RPCError
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram import Client
+# from pyrogram.types import Message, ReplyParameters
+# from pyrogram.errors import FloodWait, RPCError
 from PlayLoom.utils.logger import logger
 from PlayLoom.utils.database import db
 from PlayLoom.utils.messages import (
@@ -177,6 +178,9 @@ class RateLimiter:
             self.request_event.set()
 
     async def request_executor(self):
+        # --- FIX: Import Pyrogram classes here ---
+        from pyrogram.errors import FloodWait
+        
         logger.debug("Request executor started.")
         while True:
             try:
@@ -337,7 +341,11 @@ async def request_executor():
     await rate_limiter.request_executor()
 
 
-async def handle_rate_limited_request(bot: Client, message: Message, handler: Callable, *args, **kwargs):
+async def handle_rate_limited_request(bot, message, handler: Callable, *args, **kwargs):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+    
     rl_user_id = kwargs.pop('rl_user_id', None)
     user_id = rl_user_id if rl_user_id is not None else (message.from_user.id if message and message.from_user else None)
     if not isinstance(user_id, int):
@@ -381,7 +389,12 @@ async def handle_rate_limited_request(bot: Client, message: Message, handler: Ca
             await send_queue_full_message(bot, message, file_identifier)
 
 
-async def _send_notification(bot: Client, message: Message, template: str, file_identifier: Optional[str], **format_kwargs):
+async def _send_notification(bot, message, template: str, file_identifier: Optional[str], **format_kwargs):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message, ReplyParameters
+    from pyrogram.errors import FloodWait, RPCError
+
     try:
         if message.from_user:
             user_id = message.from_user.id
@@ -407,7 +420,11 @@ async def _send_notification(bot: Client, message: Message, template: str, file_
     return None
 
 
-async def send_queue_notification(bot: Client, message: Message, is_priority: bool, file_identifier: Optional[str]):
+async def send_queue_notification(bot, message, is_priority: bool, file_identifier: Optional[str]):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+
     if is_priority:
         template = MSG_RATE_LIMIT_QUEUE_PRIORITY
         params = {}
@@ -425,7 +442,11 @@ async def send_queue_notification(bot: Client, message: Message, is_priority: bo
     return await _send_notification(bot, message, template, file_identifier, **params)
 
 
-async def send_queue_full_message(bot: Client, message: Message, file_identifier: Optional[str]):
+async def send_queue_full_message(bot, message, file_identifier: Optional[str]):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+    
     user_id = message.from_user.id if message.from_user else "channel"
     logger.debug(f"Sending queue full message to user {user_id}")
     await _send_notification(bot, message, MSG_RATE_LIMIT_QUEUE_FULL, file_identifier)

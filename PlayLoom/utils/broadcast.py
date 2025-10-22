@@ -4,12 +4,13 @@ import asyncio
 import os
 import time
 
-from pyrogram.client import Client
-from pyrogram.enums import ParseMode
-from pyrogram.errors import (ChatWriteForbidden, FloodWait, PeerIdInvalid, UserDeactivated,
-                             UserIsBlocked, ChannelInvalid, InputUserDeactivated)
-from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                            Message)
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram.client import Client
+# from pyrogram.enums import ParseMode
+# from pyrogram.errors import (ChatWriteForbidden, FloodWait, PeerIdInvalid, UserDeactivated,
+#                              UserIsBlocked, ChannelInvalid, InputUserDeactivated)
+# from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
+#                             Message)
 
 from PlayLoom.utils.database import db
 from PlayLoom.utils.handler import handle_flood_wait
@@ -25,7 +26,13 @@ from PlayLoom.utils.time_format import get_readable_time
 
 broadcast_ids = {}
 
-async def broadcast_message(client: Client, message: Message):
+async def broadcast_message(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.enums import ParseMode
+    from pyrogram.errors import (ChatWriteForbidden, FloodWait, PeerIdInvalid, UserDeactivated,
+                                 UserIsBlocked, ChannelInvalid, InputUserDeactivated)
+    from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, Message)
+
     if not message.reply_to_message:
         await handle_flood_wait(message.reply_text, MSG_INVALID_BROADCAST_CMD)
         return

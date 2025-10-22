@@ -4,17 +4,19 @@ import asyncio
 import secrets
 from typing import Any, Dict, Optional
 
-from pyrogram import Client, enums, filters
-from pyrogram.errors import MessageNotModified, MessageDeleteForbidden, MessageIdInvalid
-from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                            LinkPreviewOptions, Message)
+from pyrogram import filters # KEEP filters here for decorators
+
+# --- REMOVED TOP-LEVEL IMPORTS:
+# from pyrogram import Client, enums
+# from pyrogram.errors import MessageNotModified, MessageDeleteForbidden, MessageIdInvalid
+# from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message)
 
 from PlayLoom.bot import StreamBot
 from PlayLoom.utils.bot_utils import (gen_links, is_admin, log_newusr, notify_own,
-                                     reply_user_err)
+                                      reply_user_err)
 from PlayLoom.utils.database import db
 from PlayLoom.utils.decorators import (check_banned, get_shortener_status,
-                                      require_token)
+                                       require_token)
 from PlayLoom.utils.force_channel import force_channel_check
 from PlayLoom.utils.handler import handle_flood_wait
 from PlayLoom.utils.logger import logger
@@ -37,7 +39,10 @@ BATCH_UPDATE_INTERVAL = 5
 MESSAGE_DELAY = 0.5
 
 
-async def fwd_media(m_msg: Message) -> Optional[Message]:
+async def fwd_media(m_msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message
+    
     try:
         return await handle_flood_wait(m_msg.copy, chat_id=Var.BIN_CHANNEL)
     except Exception as e:
@@ -49,12 +54,19 @@ async def fwd_media(m_msg: Message) -> Optional[Message]:
 
 
 def get_link_buttons(links):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+    
     return InlineKeyboardMarkup([[
         InlineKeyboardButton(MSG_BUTTON_STREAM_NOW, url=links['stream_link']),
         InlineKeyboardButton(MSG_BUTTON_DOWNLOAD, url=links['online_link'])
     ]])
 
-async def validate_request_common(client: Client, message: Message) -> Optional[bool]:
+async def validate_request_common(client, message):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+
     if not await check_banned(client, message):
         return None
     if not await require_token(client, message):
@@ -64,7 +76,10 @@ async def validate_request_common(client: Client, message: Message) -> Optional[
     return await get_shortener_status(client, message)
 
 
-async def send_channel_links(target_msg: Message, links: Dict[str, Any], source_info: str, source_id: int):
+async def send_channel_links(target_msg, links: Dict[str, Any], source_info: str, source_id: int):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram.types import Message, LinkPreviewOptions
+    
     await handle_flood_wait(
         target_msg.reply_text,
         MSG_NEW_FILE_REQUEST.format(
@@ -78,7 +93,11 @@ async def send_channel_links(target_msg: Message, links: Dict[str, Any], source_
     )
 
 
-async def safe_edit_message(message: Message, text: str, **kwargs):
+async def safe_edit_message(message, text: str, **kwargs):
+    # --- FIX: Import Pyrogram errors and types here ---
+    from pyrogram.errors import MessageNotModified, MessageDeleteForbidden
+    from pyrogram.types import Message
+    
     try:
         return await handle_flood_wait(message.edit_text, text, **kwargs)
     except MessageNotModified:
@@ -89,7 +108,11 @@ async def safe_edit_message(message: Message, text: str, **kwargs):
         logger.error(f"Error editing message {message.id}: {e}", exc_info=True)
 
 
-async def safe_delete_message(message: Message):
+async def safe_delete_message(message):
+    # --- FIX: Import Pyrogram errors and types here ---
+    from pyrogram.errors import MessageDeleteForbidden
+    from pyrogram.types import Message
+
     try:
         await handle_flood_wait(message.delete)
     except MessageDeleteForbidden:
@@ -98,7 +121,11 @@ async def safe_delete_message(message: Message):
         logger.error(f"Error deleting message {message.id}: {e}", exc_info=True)
 
 
-async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_title: str):
+async def send_dm_links(bot, user_id: int, links: Dict[str, Any], chat_title: str):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client, enums
+    from pyrogram.types import LinkPreviewOptions
+    
     try:
         dm_text = MSG_DM_SINGLE_PREFIX.format(chat_title=chat_title) + "\n" + \
                   MSG_LINKS.format(
@@ -119,7 +146,11 @@ async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_t
         logger.error(f"Error sending DM to user {user_id}: {e}", exc_info=True)
 
 
-async def send_link(msg: Message, links: Dict[str, Any]):
+async def send_link(msg, links: Dict[str, Any]):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import enums
+    from pyrogram.types import Message, LinkPreviewOptions
+    
     await handle_flood_wait(
         msg.reply_text,
         MSG_LINKS.format(
@@ -136,8 +167,12 @@ async def send_link(msg: Message, links: Dict[str, Any]):
 
 
 @StreamBot.on_message(filters.command("link") & ~filters.private)
-async def link_handler(bot: Client, msg: Message, **kwargs):
-    async def _actual_link_handler(client: Client, message: Message, **handler_kwargs):
+async def link_handler(bot, msg, **kwargs):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client, enums
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message
+
+    async def _actual_link_handler(client, message, **handler_kwargs):
         shortener_val = await validate_request_common(client, message)
         if shortener_val is None:
             return
@@ -197,8 +232,12 @@ async def link_handler(bot: Client, msg: Message, **kwargs):
      filters.voice | filters.animation | filters.video_note),
     group=4
 )
-async def private_receive_handler(bot: Client, msg: Message, **kwargs):
-    async def _actual_private_receive_handler(client: Client, message: Message, **handler_kwargs):
+async def private_receive_handler(bot, msg, **kwargs):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client
+    from pyrogram.types import Message
+    
+    async def _actual_private_receive_handler(client, message, **handler_kwargs):
         shortener_val = await validate_request_common(client, message)
         if shortener_val is None:
             return
@@ -221,8 +260,13 @@ async def private_receive_handler(bot: Client, msg: Message, **kwargs):
     ~filters.chat(Var.BIN_CHANNEL),
     group=-1
 )
-async def channel_receive_handler(bot: Client, msg: Message):
-    async def _actual_channel_receive_handler(client: Client, message: Message, **handler_kwargs):
+async def channel_receive_handler(bot, msg):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client, enums
+    from pyrogram.errors import MessageNotModified, MessageDeleteForbidden, MessageIdInvalid
+    from pyrogram.types import Message, LinkPreviewOptions, InlineKeyboardMarkup
+    
+    async def _actual_channel_receive_handler(client, message, **handler_kwargs):
         if not Var.CHANNEL:
             return
         notification_msg = handler_kwargs.get('notification_msg')
@@ -296,14 +340,18 @@ async def channel_receive_handler(bot: Client, msg: Message):
 
 
 async def process_single(
-    bot: Client,
-    msg: Message,
-    file_msg: Message,
-    status_msg: Message,
+    bot,
+    msg,
+    file_msg,
+    status_msg,
     shortener_val: bool,
-    original_request_msg: Optional[Message] = None,
-    notification_msg: Optional[Message] = None
+    original_request_msg=None,
+    notification_msg=None
 ):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client, enums
+    from pyrogram.types import Message, LinkPreviewOptions
+    
     try:
         stored_msg = await fwd_media(file_msg)
         if not stored_msg:
@@ -366,14 +414,19 @@ async def process_single(
 
 
 async def process_batch(
-    bot: Client,
-    msg: Message,
+    bot,
+    msg,
     start_id: int,
     count: int,
-    status_msg: Message,
+    status_msg,
     shortener_val: bool,
-    notification_msg: Optional[Message] = None
+    notification_msg=None
 ):
+    # --- FIX: Import Pyrogram classes here ---
+    from pyrogram import Client, enums
+    from pyrogram.errors import MessageNotModified
+    from pyrogram.types import Message, LinkPreviewOptions
+    
     processed = 0
     failed = 0
     links_list = []
