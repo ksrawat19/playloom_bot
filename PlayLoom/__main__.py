@@ -5,15 +5,15 @@ import glob
 import importlib.util
 import sys
 from datetime import datetime
-
-from uvloop import install
 from pathlib import Path
 
+from uvloop import install
 install()
-from aiohttp  import web
+
+from aiohttp import web
 
 from PlayLoom import __version__
-from PlayLoom.bot import StreamBot
+from PlayLoom.bot import StreamBot_Config, StreamBot  # Only config and placeholder
 from PlayLoom.bot.clients import cleanup_clients, initialize_clients
 from PlayLoom.server import web_server
 from PlayLoom.utils.commands import set_commands
@@ -26,10 +26,8 @@ from PlayLoom.utils.rate_limiter import rate_limiter, request_executor
 from PlayLoom.utils.tokens import cleanup_expired_tokens
 from PlayLoom.vars import Var
 
-
 PLUGIN_PATH = "PlayLoom/bot/plugins/*.py"
 VERSION = __version__
-
 
 def print_banner():
     banner = f"""
@@ -37,16 +35,15 @@ def print_banner():
 ║                                                                   ║
 ║   ████████╗██╗  ██╗██╗   ██╗███╗   ██╗██████╗ ███████╗██████╗     ║
 ║   ╚══██╔══╝██║  ██║██║   ██║████╗  ██║██╔══██╗██╔════╝██╔══██╗    ║
-║      ██║   ███████║██║   ██║██╔██╗ ██║██║  ██║█████╗  ██████╔╝    ║
-║      ██║   ██╔══██║██║   ██║██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗    ║
-║      ██║   ██║  ██║╚██████╔╝██║ ╚████║██████╔╝███████╗██║  ██║    ║
-║      ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝    ║
+║     ██║   ███████║██║   ██║██╔██╗ ██║██║  ██║█████╗  ██████╔╝    ║
+║     ██║   ██╔══██║██║   ██║██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗    ║
+║     ██║   ██║  ██║╚██████╔╝██║ ╚████║██████╔╝███████╗██║  ██║    ║
+║     ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝     ║
 ║                                                                   ║
-║                  File Streaming Bot v{VERSION}                        ║
+║                 File Streaming Bot v{VERSION}                     ║
 ╚═══════════════════════════════════════════════════════════════════╝
 """
     print(banner)
-
 
 async def import_plugins():
     print("╠════════════════════ IMPORTING PLUGINS ════════════════════╣")
@@ -64,9 +61,7 @@ async def import_plugins():
             plugin_name = plugin_path.stem
             import_path = f"PlayLoom.bot.plugins.{plugin_name}"
 
-            spec = importlib.util.spec_from_file_location(
-                import_path, plugin_path
-            )
+            spec = importlib.util.spec_from_file_location(import_path, plugin_path)
             if spec is None or spec.loader is None:
                 logger.error(f"Invalid plugin specification for {plugin_name}")
                 failed_plugins.append(plugin_name)
@@ -78,21 +73,24 @@ async def import_plugins():
             success_count += 1
 
         except Exception as e:
-            plugin_name = Path(file_path).stem
             logger.error(f"   ✖ Failed to import plugin {plugin_name}: {e}")
             failed_plugins.append(plugin_name)
 
-    print(
-        f"   ▶ Total: {len(plugins)} | Success: {success_count} | "
-        f"Failed: {len(failed_plugins)}"
-    )
+    print(f"   ▶ Total: {len(plugins)} | Success: {success_count} | Failed: {len(failed_plugins)}")
     if failed_plugins:
         print(f"   ▶ Failed plugins: {', '.join(failed_plugins)}")
-
     return success_count
 
-
 async def start_services():
+    global StreamBot
+    from pyrogram import Client  # ✅ Import here, after event loop exists
+
+    try:
+        StreamBot = Client(**StreamBot_Config)
+    except Exception as e:
+        logger.error(f"   ✖ Failed to create Pyrogram Client: {e}", exc_info=True)
+        return
+
     start_time = datetime.now()
     print_banner()
     print("╔════════════════ INITIALIZING BOT SERVICES ════════════════╗")
@@ -116,20 +114,12 @@ async def start_services():
                     message_id=restart_message_data["message_id"],
                     text=MSG_ADMIN_RESTART_DONE,
                 )
-                await db.delete_restart_message(
-                    restart_message_data["message_id"]
-                )
+                await db.delete_restart_message(restart_message_data["message_id"])
             except Exception as e:
-                logger.error(
-                    f"Error processing restart message: {e}", exc_info=True
-                )
-        else:
-            pass
+                logger.error(f"Error processing restart message: {e}", exc_info=True)
 
     except Exception as e:
-        logger.error(
-            f"   ✖ Failed to initialize Telegram Bot: {e}", exc_info=True
-        )
+        logger.error(f"   ✖ Failed to initialize Telegram Bot: {e}", exc_info=True)
         return
 
     print("   ▶ Starting Client initialization...")
@@ -143,14 +133,10 @@ async def start_services():
 
     print("   ▶ Starting Request Executor initialization...")
     try:
-        request_executor_task = asyncio.create_task(
-            request_executor(), name="request_executor_task"
-        )
+        request_executor_task = asyncio.create_task(request_executor(), name="request_executor_task")
         print("   ✓ Request executor service started")
     except Exception as e:
-        logger.error(
-            f"   ✖ Failed to start request executor: {e}", exc_info=True
-        )
+        logger.error(f"   ✖ Failed to start request executor: {e}", exc_info=True)
         return
 
     print("   ▶ Starting Web Server initialization...")
@@ -161,13 +147,9 @@ async def start_services():
         site = web.TCPSite(app_runner, bind_address, Var.PORT)
         await site.start()
 
-        keepalive_task = asyncio.create_task(
-            ping_server(), name="keepalive_task"
-        )
+        keepalive_task = asyncio.create_task(ping_server(), name="keepalive_task")
         print("   ✓ Keep-alive service started")
-        token_cleanup_task = asyncio.create_task(
-            schedule_token_cleanup(), name="token_cleanup_task"
-        )
+        token_cleanup_task = asyncio.create_task(schedule_token_cleanup(), name="token_cleanup_task")
 
     except Exception as e:
         logger.error(f"   ✖ Failed to start Web Server: {e}", exc_info=True)
@@ -201,11 +183,7 @@ async def start_services():
     print("╚═══════════════════════════════════════════════════════════╝")
     print("   ▶ Bot is now running! Press CTRL+C to stop.")
 
-    background_tasks = [
-        request_executor_task,
-        keepalive_task,
-        token_cleanup_task
-    ]
+    background_tasks = [request_executor_task, keepalive_task, token_cleanup_task]
 
     try:
         await asyncio.Event().wait()
@@ -235,7 +213,6 @@ async def start_services():
                 await app_runner.cleanup()
             except Exception as e:
                 logger.error(f"Error during web server cleanup: {e}")
-
 
 async def schedule_token_cleanup():
     while True:

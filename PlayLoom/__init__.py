@@ -3,8 +3,6 @@
 import os
 os.environ["PYROGRAM_DISABLE_SYNC"] = "1"
 
-from pyrogram import Client
-
 import time
 
 StartTime = time.time()
