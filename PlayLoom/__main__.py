@@ -1,5 +1,3 @@
-# PlayLoom/__main__.py
-
 import asyncio
 import glob
 import importlib.util
@@ -13,19 +11,19 @@ install()
 from aiohttp import web
 
 from PlayLoom import __version__
-from PlayLoom.bot import StreamBot_Config, StreamBot  # Only config and placeholder
+from PlayLoom.bot import StreamBot_Config
 from PlayLoom.bot.clients import cleanup_clients, initialize_clients
 from PlayLoom.server import web_server
 from PlayLoom.utils.commands import set_commands
 from PlayLoom.utils.database import db
 from PlayLoom.utils.handler import handle_flood_wait
-from PlayLoom.utils.keepalive import ping_server
 from PlayLoom.utils.logger import logger
 from PlayLoom.utils.messages import MSG_ADMIN_RESTART_DONE
 from PlayLoom.utils.rate_limiter import rate_limiter, request_executor
 from PlayLoom.utils.tokens import cleanup_expired_tokens
 from PlayLoom.vars import Var
 
+StreamBot = None
 PLUGIN_PATH = "PlayLoom/bot/plugins/*.py"
 VERSION = __version__
 
@@ -81,9 +79,20 @@ async def import_plugins():
         print(f"   ▶ Failed plugins: {', '.join(failed_plugins)}")
     return success_count
 
+async def schedule_token_cleanup():
+    while True:
+        try:
+            await asyncio.sleep(3 * 3600)
+            await cleanup_expired_tokens()
+        except asyncio.CancelledError:
+            logger.debug("schedule_token_cleanup cancelled cleanly.")
+            break
+        except Exception as e:
+            logger.error(f"Token cleanup error: {e}", exc_info=True)
+
 async def start_services():
     global StreamBot
-    from pyrogram import Client  # ✅ Import here, after event loop exists
+    from pyrogram import Client
 
     try:
         StreamBot = Client(**StreamBot_Config)
@@ -147,9 +156,8 @@ async def start_services():
         site = web.TCPSite(app_runner, bind_address, Var.PORT)
         await site.start()
 
-        keepalive_task = asyncio.create_task(ping_server(), name="keepalive_task")
-        print("   ✓ Keep-alive service started")
         token_cleanup_task = asyncio.create_task(schedule_token_cleanup(), name="token_cleanup_task")
+        print("   ✓ Web server started")
 
     except Exception as e:
         logger.error(f"   ✖ Failed to start Web Server: {e}", exc_info=True)
@@ -183,7 +191,7 @@ async def start_services():
     print("╚═══════════════════════════════════════════════════════════╝")
     print("   ▶ Bot is now running! Press CTRL+C to stop.")
 
-    background_tasks = [request_executor_task, keepalive_task, token_cleanup_task]
+    background_tasks = [request_executor_task, token_cleanup_task]
 
     try:
         await asyncio.Event().wait()
@@ -213,17 +221,6 @@ async def start_services():
                 await app_runner.cleanup()
             except Exception as e:
                 logger.error(f"Error during web server cleanup: {e}")
-
-async def schedule_token_cleanup():
-    while True:
-        try:
-            await asyncio.sleep(3 * 3600)
-            await cleanup_expired_tokens()
-        except asyncio.CancelledError:
-            logger.debug("schedule_token_cleanup cancelled cleanly.")
-            break
-        except Exception as e:
-            logger.error(f"Token cleanup error: {e}", exc_info=True)
 
 if __name__ == '__main__':
     try:

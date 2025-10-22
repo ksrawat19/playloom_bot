@@ -2,11 +2,14 @@
 
 import asyncio
 
-from PlayLoom.bot import StreamBot, multi_clients, work_loads
 from PlayLoom.utils.config_parser import TokenParser
 from PlayLoom.utils.handler import handle_flood_wait
 from PlayLoom.utils.logger import logger
 from PlayLoom.vars import Var
+
+# These will be populated dynamically
+multi_clients = {}
+work_loads = {}
 
 async def cleanup_clients():
     for client in multi_clients.values():
@@ -16,14 +19,19 @@ async def cleanup_clients():
             logger.error(f"Error stopping client: {e}", exc_info=True)
 
 async def initialize_clients():
-    # --- FIX: Import Client here, inside the async function ---
-    from pyrogram import Client 
-    # --------------------------------------------------------
-    
+    from pyrogram import Client
+    from PlayLoom.bot import StreamBot  # ✅ Import here to ensure it's initialized
+
     print("╠══════════════════ INITIALIZING CLIENTS ═══════════════════╣")
-    multi_clients[0] = StreamBot
-    work_loads[0] = 0
-    print("   ✓ Primary client initialized")
+
+    if StreamBot:
+        multi_clients[0] = StreamBot
+        work_loads[0] = 0
+        print("   ✓ Primary client initialized")
+    else:
+        logger.error("   ✖ StreamBot is None — primary client not initialized")
+        return
+
     try:
         all_tokens = TokenParser().parse_from_env()
         if not all_tokens:
@@ -36,8 +44,6 @@ async def initialize_clients():
 
     async def start_client(client_id, token):
         try:
-            if client_id == len(all_tokens):
-                await asyncio.sleep(2)
             client = Client(
                 api_hash=Var.API_HASH,
                 api_id=Var.API_ID,
@@ -56,20 +62,20 @@ async def initialize_clients():
             logger.error(f"   ✖ Failed to start Client ID {client_id}. Error: {e}", exc_info=True)
             return None
 
-    clients = await asyncio.gather(*[start_client(i, token) for i, token in all_tokens.items() if token])
+    clients = await asyncio.gather(*[
+        start_client(i, token)
+        for i, token in all_tokens.items() if token
+    ])
     clients = [client for client in clients if client]
-
     multi_clients.update(dict(clients))
-    
+
     if len(multi_clients) > 1:
         Var.MULTI_CLIENT = True
         print("╠══════════════════════ MULTI-CLIENT ═══════════════════════╣")
         print(f"   ◎ Total Clients: {len(multi_clients)} (Including primary client)")
-        
         print("   ▶ Initial workload distribution:")
         for client_id, load in work_loads.items():
             print(f"   • Client {client_id}: {load} tasks")
-            
     else:
         print("╠═══════════════════════════════════════════════════════════╣")
         print("   ▶ No additional clients were initialized")

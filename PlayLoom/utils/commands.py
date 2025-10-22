@@ -1,9 +1,8 @@
-from PlayLoom.bot import StreamBot
 from PlayLoom.utils.logger import logger
 from PlayLoom.vars import Var
 
 def get_commands():
-    from pyrogram.types import BotCommand  # ✅ Import moved inside the function
+    from pyrogram.types import BotCommand  # ✅ Deferred import
 
     command_descriptions = {
         "start": "Start the bot and get a welcome message",
@@ -30,8 +29,9 @@ def get_commands():
 async def set_commands():
     if Var.SET_COMMANDS:
         try:
+            from PlayLoom.bot import StreamBot  # ✅ Import here to ensure it's initialized
             commands = get_commands()
-            if commands:
+            if commands and StreamBot:
                 await StreamBot.set_bot_commands(commands)
         except Exception as e:
             logger.error(f"Failed to set bot commands: {e}", exc_info=True)
