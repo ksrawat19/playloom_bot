@@ -1,10 +1,10 @@
-from pyrogram.types import BotCommand
-
 from PlayLoom.bot import StreamBot
 from PlayLoom.utils.logger import logger
 from PlayLoom.vars import Var
 
 def get_commands():
+    from pyrogram.types import BotCommand  # ✅ Import moved inside the function
+
     command_descriptions = {
         "start": "Start the bot and get a welcome message",
         "link": "(Group) Generate a direct link for a file or batch",

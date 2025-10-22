@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 import asyncio
 import random
-import pyrogram.errors
+# --- REMOVED TOP-LEVEL IMPORT:
+# import pyrogram.errors 
 from PlayLoom.utils.database import db
 from PlayLoom.vars import Var
 from PlayLoom.utils.logger import logger
@@ -38,6 +39,9 @@ async def check(user_id: int) -> bool:
         raise
 
 async def generate(user_id: int) -> str:
+    # --- FIX: Import Pyrogram errors here ---
+    import pyrogram.errors
+    
     try:
         logger.debug(f"Token generation started for user: {user_id}")
         existing_token_doc = await db.token_col.find_one(
